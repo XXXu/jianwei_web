@@ -108,9 +108,8 @@ Principles:
 
 This project is currently in the initial productization stage. Implementation has not started yet.
 
-The design document currently lives in the Horizon project:
+The design document lives in this project:
 
 ```text
-../Horizon/docs/superpowers/specs/2026-05-11-horizon-product-design.md
+docs/superpowers/specs/2026-05-11-horizon-product-design.md
 ```
-

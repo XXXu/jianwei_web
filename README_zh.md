@@ -108,9 +108,8 @@ Nginx
 
 当前项目处于产品化初始阶段，尚未开始正式实现。
 
-设计文档位于 Horizon 项目中：
+设计文档位于本项目中：
 
 ```text
-../Horizon/docs/superpowers/specs/2026-05-11-horizon-product-design.md
+docs/superpowers/specs/2026-05-11-horizon-product-design.md
 ```
-
