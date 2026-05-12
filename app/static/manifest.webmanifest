@@ -1,0 +1,12 @@
+{
+  "name": "见微",
+  "short_name": "见微",
+  "description": "面向不同角色的 AI 情报网站",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#111827",
+  "lang": "zh-CN",
+  "icons": []
+}

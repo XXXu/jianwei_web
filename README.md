@@ -113,3 +113,60 @@ The design document lives in this project:
 ```text
 docs/superpowers/specs/2026-05-11-horizon-product-design.md
 ```
+
+## Linux 部署验证
+
+当前 MVP 已经具备 FastAPI 应用、SQLite 数据模型、角色化页面、JSON API、PWA 基础文件、Horizon artifact 导入链路和历史归档基础。
+
+在 Linux 服务器上进入项目目录后，先准备环境变量：
+
+```bash
+cp .env.example .env
+```
+
+确认 Docker Compose 文件可以解析：
+
+```bash
+sudo docker compose config
+```
+
+构建并后台启动：
+
+```bash
+sudo docker compose up -d --build
+```
+
+查看日志：
+
+```bash
+sudo docker compose logs -f
+```
+
+验证健康检查：
+
+```bash
+curl http://127.0.0.1:8080/health
+```
+
+预期返回：
+
+```json
+{"status":"ok","service":"jianwei"}
+```
+
+浏览器访问：
+
+```text
+http://服务器公网 IP:8080
+```
+
+如果公网无法访问，请在腾讯云控制台检查安全组入站规则，至少开放 TCP `8080` 端口。
+
+Docker Compose 中的 `web` 服务启动时会自动执行数据库迁移和默认角色初始化：
+
+```bash
+uv run alembic upgrade head
+uv run python -m app.seed
+```
+
+SQLite 数据库会保存在宿主机项目目录的 `data/` 目录中。

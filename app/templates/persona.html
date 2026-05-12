@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ persona.name }} - 见微{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">今日情报</p>
+  <h1>{{ persona.name }}</h1>
+  <p>{{ persona.description }}</p>
+</section>
+
+<section class="subscription-panel">
+  <h2>订阅这个角色</h2>
+  {% if subscription_message %}
+    <p class="notice">{{ subscription_message }}</p>
+  {% endif %}
+  <form method="post" action="/personas/{{ persona.slug }}/subscribe">
+    <label>
+      邮箱
+      <input type="email" name="email" required>
+    </label>
+    <label>
+      关键词
+      <input type="text" name="keywords">
+    </label>
+    <button type="submit">订阅</button>
+  </form>
+</section>
+
+<section class="feed-list">
+  {% if analyses %}
+    {% for analysis in analyses %}
+      <article class="feed-item">
+        <div class="score">{{ "%.1f"|format(analysis.score) }}</div>
+        <div>
+          <h2><a href="/items/{{ analysis.id }}">{{ analysis.item.title }}</a></h2>
+          <p>{{ analysis.summary }}</p>
+          <p class="muted">{{ analysis.why_it_matters }}</p>
+          <div class="tags">
+            {% for tag in analysis.tags %}
+              <span>{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">这个角色还没有生成情报。后台任务运行后会显示内容。</p>
+  {% endif %}
+</section>
+{% endblock %}

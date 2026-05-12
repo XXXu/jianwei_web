@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}历史归档 - 见微{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Archive</p>
+  <h1>历史归档</h1>
+  <p>按日期和角色查看已经发布的情报。</p>
+</section>
+
+<section class="feed-list">
+  {% if briefings %}
+    {% for briefing in briefings %}
+      <article class="feed-item">
+        <div class="score">{{ briefing.date.strftime("%m-%d") }}</div>
+        <div>
+          <h2>{{ briefing.title }}</h2>
+          <p>{{ briefing.summary }}</p>
+          <p class="muted">{{ briefing.persona.name }}</p>
+        </div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">还没有历史情报。后台任务发布日报后会显示在这里。</p>
+  {% endif %}
+</section>
+{% endblock %}

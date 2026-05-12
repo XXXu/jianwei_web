@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ analysis.item.title }} - 见微{% endblock %}
+{% block content %}
+<article class="detail">
+  <p class="eyebrow">{{ analysis.persona.name }}</p>
+  <h1>{{ analysis.item.title }}</h1>
+  <p class="summary">{{ analysis.summary }}</p>
+
+  <section>
+    <h2>为什么重要</h2>
+    <p>{{ analysis.why_it_matters }}</p>
+  </section>
+
+  <section>
+    <h2>可做机会</h2>
+    <ul>
+      {% for opportunity in analysis.opportunities %}
+        <li>{{ opportunity }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>风险提醒</h2>
+    <ul>
+      {% for risk in analysis.risks %}
+        <li>{{ risk }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <p><a href="{{ analysis.item.url }}" rel="noreferrer">查看原始来源</a></p>
+</article>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}见微 - 从信息里看见方向{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">角色化 AI 情报雷达</p>
+  <h1>从信息里看见方向</h1>
+  <p>选择你的角色，查看为你重新加工的机会、风险和关键变化。</p>
+</section>
+
+<section class="persona-grid" aria-label="角色选择">
+  {% for persona in personas %}
+    <a class="persona-card" href="/personas/{{ persona.slug }}">
+      <h2>{{ persona.name }}</h2>
+      <p>{{ persona.description }}</p>
+    </a>
+  {% endfor %}
+</section>
+{% endblock %}
