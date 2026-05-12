@@ -54,7 +54,7 @@ The first version will include:
 - JSON API
 - Server-rendered pages
 - Basic PWA support
-- Docker Compose deployment
+- Nginx reverse proxy deployment
 
 The first version will not include:
 
@@ -88,7 +88,7 @@ Planned stack:
 - SQLAlchemy: database access layer
 - Alembic: database migrations
 - cron or APScheduler: scheduled jobs
-- Docker Compose: single-server deployment
+- Docker Compose: starts the Nginx reverse proxy only
 - Nginx: reverse proxy, HTTPS, static assets
 - PWA: lightweight app-like experience from the browser
 
@@ -114,15 +114,48 @@ The design document lives in this project:
 docs/superpowers/specs/2026-05-11-horizon-product-design.md
 ```
 
-## Linux 部署验证
+## Linux 直接部署 Web 应用
 
 当前 MVP 已经具备 FastAPI 应用、SQLite 数据模型、角色化页面、JSON API、PWA 基础文件、Horizon artifact 导入链路和历史归档基础。
 
-在 Linux 服务器上进入项目目录后，先准备环境变量：
+在 Linux 服务器上进入项目目录后，先创建虚拟环境并安装依赖：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+准备环境变量：
 
 ```bash
 cp .env.example .env
 ```
+
+初始化数据库和默认角色：
+
+```bash
+mkdir -p data
+python -m alembic upgrade head
+python -m app.seed
+```
+
+启动 Web 应用：
+
+```bash
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+验证健康检查：
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+## Docker Compose 启动 Nginx
+
+当前 `docker-compose.yml` 只启动 Nginx 容器。`jianwei_web` 应用直接运行在 Linux 宿主机的 `8000` 端口。
 
 确认 Docker Compose 文件可以解析：
 
@@ -130,10 +163,10 @@ cp .env.example .env
 sudo docker compose config
 ```
 
-构建并后台启动：
+启动 Nginx：
 
 ```bash
-sudo docker compose up -d --build
+sudo docker compose up -d
 ```
 
 查看日志：
@@ -142,10 +175,10 @@ sudo docker compose up -d --build
 sudo docker compose logs -f
 ```
 
-验证健康检查：
+验证 Nginx 代理：
 
 ```bash
-curl http://127.0.0.1:8080/health
+curl http://127.0.0.1/health
 ```
 
 预期返回：
@@ -157,16 +190,16 @@ curl http://127.0.0.1:8080/health
 浏览器访问：
 
 ```text
-http://服务器公网 IP:8080
+http://服务器公网 IP
 ```
 
-如果公网无法访问，请在腾讯云控制台检查安全组入站规则，至少开放 TCP `8080` 端口。
+如果公网无法访问，请在腾讯云控制台检查安全组入站规则，至少开放 TCP `80` 端口。
 
-Docker Compose 中的 `web` 服务启动时会自动执行数据库迁移和默认角色初始化：
+直接部署时，需要手动执行数据库迁移和默认角色初始化：
 
 ```bash
-uv run alembic upgrade head
-uv run python -m app.seed
+python -m alembic upgrade head
+python -m app.seed
 ```
 
 SQLite 数据库会保存在宿主机项目目录的 `data/` 目录中。
