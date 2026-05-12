@@ -156,10 +156,34 @@ python -m alembic upgrade head
 python -m app.seed
 ```
 
+给脚本增加执行权限：
+
+```bash
+chmod +x bin/start.sh bin/stop.sh
+```
+
 启动 Web 应用：
 
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+./bin/start.sh
+```
+
+脚本会自动执行数据库迁移、初始化默认角色，并把服务放到后台运行。默认监听 `0.0.0.0:8000`，日志写入：
+
+```text
+logs/jianwei.log
+```
+
+查看日志：
+
+```bash
+tail -f logs/jianwei.log
+```
+
+停止 Web 应用：
+
+```bash
+./bin/stop.sh
 ```
 
 验证健康检查：
@@ -228,14 +252,14 @@ http://服务器公网 IP
 
 ## 数据库迁移和默认角色
 
-直接部署时，需要手动执行：
+直接部署时，`bin/start.sh` 会自动执行：
 
 ```bash
 python -m alembic upgrade head
 python -m app.seed
 ```
 
-也就是说，第一次部署时需要创建数据库表，并初始化默认角色。SQLite 数据库会保存在项目目录的 `data/` 目录中。
+也就是说，启动脚本会创建/升级数据库表，并初始化默认角色。SQLite 数据库会保存在项目目录的 `data/` 目录中。
 
 ## 常用运维命令
 
@@ -261,4 +285,16 @@ sudo docker compose ps
 
 ```bash
 sudo docker compose exec nginx sh
+```
+
+查看 Web 应用日志：
+
+```bash
+tail -f logs/jianwei.log
+```
+
+停止 Web 应用：
+
+```bash
+./bin/stop.sh
 ```

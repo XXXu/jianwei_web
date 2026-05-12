@@ -43,6 +43,7 @@ data/*.sqlite
 data/*.sqlite3
 data/logs/
 logs/
+runtime/
 *.log
 
 # Generated artifacts
@@ -80,4 +81,3 @@ Thumbs.db
 
 # Docker local overrides
 docker-compose.override.yml
-
