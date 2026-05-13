@@ -159,7 +159,7 @@ python -m app.seed
 给脚本增加执行权限：
 
 ```bash
-chmod +x bin/start.sh bin/stop.sh
+chmod +x bin/start.sh bin/stop.sh bin/import_artifacts.sh
 ```
 
 启动 Web 应用：
@@ -249,6 +249,32 @@ http://服务器公网 IP
 ```
 
 如果公网无法访问，请在腾讯云控制台检查安全组入站规则，至少开放 TCP `80` 端口。正式上线时建议再接入域名和 HTTPS。
+
+## 导入 Horizon 真实数据
+
+Horizon 负责抓取真实数据源并输出见微可导入的 artifact。先在 `Horizon` 项目中运行：
+
+```bash
+uv run horizon-jianwei --persona-slug indie-maker --hours 24 --limit 20
+```
+
+该命令会输出 JSON 到：
+
+```text
+../Horizon/data/jianwei_artifacts/YYYY-MM-DD/indie-maker/
+```
+
+回到 `jianwei_web` 项目，导入这些 artifact：
+
+```bash
+./bin/import_artifacts.sh ../Horizon/data/jianwei_artifacts/YYYY-MM-DD/indie-maker
+```
+
+其中 `YYYY-MM-DD` 替换为实际日期。导入完成后，访问对应角色页即可看到真实数据：
+
+```text
+http://服务器公网 IP/personas/indie-maker
+```
 
 ## 数据库迁移和默认角色
 

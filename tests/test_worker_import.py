@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Analysis, Item, Run, Source
 from app.seed import seed_default_personas
-from app.worker.import_artifact import import_artifact_file
+from app.worker.import_artifact import import_artifact_file, import_artifact_path
 
 
 def write_artifact(path: Path) -> None:
@@ -65,3 +65,17 @@ def test_import_artifact_file_is_idempotent(tmp_path: Path, db_session: Session)
     assert db_session.query(Item).count() == 1
     assert db_session.query(Analysis).count() == 1
     assert db_session.query(Run).count() == 2
+
+
+def test_import_artifact_path_imports_directory(tmp_path: Path, db_session: Session) -> None:
+    seed_default_personas(db_session)
+    artifact_path = tmp_path / "artifact.json"
+    write_artifact(artifact_path)
+
+    result = import_artifact_path(db_session, tmp_path)
+
+    assert result.fetched_count == 1
+    assert result.analyzed_count == 1
+    assert db_session.query(Source).count() == 1
+    assert db_session.query(Item).count() == 1
+    assert db_session.query(Analysis).count() == 1

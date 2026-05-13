@@ -1,9 +1,11 @@
+import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from app.db import SessionLocal
 from app.integrations.horizon_adapter import HorizonArtifact, parse_horizon_artifact
 from app.models import Analysis, Item, Persona, Source
 from app.services.runs import create_run
@@ -31,6 +33,28 @@ def import_artifact_file(session: Session, path: Path) -> ImportResult:
         analyzed_count=1,
     )
     return ImportResult(fetched_count=1, analyzed_count=1)
+
+
+def import_artifact_path(session: Session, path: Path) -> ImportResult:
+    paths = [path] if path.is_file() else sorted(path.rglob("*.json"))
+    fetched_count = 0
+    analyzed_count = 0
+    for artifact_path in paths:
+        result = import_artifact_file(session, artifact_path)
+        fetched_count += result.fetched_count
+        analyzed_count += result.analyzed_count
+    return ImportResult(fetched_count=fetched_count, analyzed_count=analyzed_count)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Import Horizon artifacts into Jianwei")
+    parser.add_argument("path", type=Path, help="Artifact JSON file or directory")
+    args = parser.parse_args()
+
+    with SessionLocal() as session:
+        result = import_artifact_path(session, args.path)
+
+    print(f"导入完成：fetched={result.fetched_count}, analyzed={result.analyzed_count}")
 
 
 def _get_persona(session: Session, artifact: HorizonArtifact) -> Persona:
@@ -119,3 +143,7 @@ def _get_or_create_analysis(
     session.commit()
     session.refresh(analysis)
     return analysis
+
+
+if __name__ == "__main__":
+    main()
