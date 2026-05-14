@@ -51,6 +51,13 @@ main {
   padding: 48px 0 32px;
 }
 
+.hero {
+  align-items: end;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
 .hero h1,
 .page-heading h1 {
   margin: 0;
@@ -61,6 +68,48 @@ main {
 .eyebrow {
   color: var(--accent);
   font-weight: 700;
+}
+
+.hero p,
+.page-heading p,
+.section-heading p {
+  max-width: 680px;
+}
+
+.hero-panel,
+.method-note {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.hero-panel span,
+.persona-card-head span,
+.persona-signal span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hero-panel strong {
+  color: var(--accent-strong);
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.section-heading {
+  margin: 28px 0 16px;
+}
+
+.section-heading h2 {
+  font-size: 28px;
+  line-height: 1.25;
+  margin: 0;
 }
 
 .persona-grid {
@@ -80,7 +129,40 @@ main {
 }
 
 .persona-card {
+  display: grid;
+  gap: 12px;
   text-decoration: none;
+}
+
+.persona-card h2,
+.feed-item h2 {
+  line-height: 1.3;
+  margin: 0;
+}
+
+.persona-card p,
+.feed-item p,
+.method-note p {
+  margin: 0;
+}
+
+.persona-card-head {
+  display: grid;
+  gap: 6px;
+}
+
+.persona-signal {
+  background: #f2fbf8;
+  border: 1px solid #cdece2;
+  border-radius: 6px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.persona-signal.empty {
+  background: #f7f8fb;
+  border-color: var(--line);
 }
 
 .feed-list {
@@ -93,6 +175,20 @@ main {
   display: grid;
   grid-template-columns: 64px 1fr;
   gap: 16px;
+}
+
+.feed-link {
+  text-decoration: none;
+}
+
+.method-note {
+  margin-top: 36px;
+}
+
+.method-note h2 {
+  font-size: 22px;
+  line-height: 1.3;
+  margin: 0 0 8px;
 }
 
 .score {
@@ -156,6 +252,10 @@ button {
 }
 
 @media (max-width: 640px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
   .hero h1,
   .page-heading h1 {
     font-size: 34px;

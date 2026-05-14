@@ -47,7 +47,19 @@ def test_homepage_lists_personas(client: TestClient, db_session: Session) -> Non
 
     assert response.status_code == 200
     assert "独立开发者" in response.text
-    assert "从信息里看见方向" in response.text
+    assert "选择你的情报视角" in response.text
+    assert "今日高价值信号" in response.text
+
+
+def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Session) -> None:
+    add_sample_analysis(db_session)
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "最近更新：1 条" in response.text
+    assert "AI Agent Builder Launches" in response.text
+    assert "一个新的 Agent 构建器发布。" in response.text
 
 
 def test_persona_page_lists_analysis(client: TestClient, db_session: Session) -> None:

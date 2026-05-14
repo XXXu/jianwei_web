@@ -5,7 +5,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db import get_session
 from app.models import Analysis
-from app.services.intelligence import list_persona_analyses, list_published_briefings
+from app.services.intelligence import (
+    count_persona_analyses,
+    list_persona_analyses,
+    list_published_briefings,
+    list_top_analyses,
+)
 from app.services.personas import get_persona_by_slug, list_enabled_personas
 from app.services.subscriptions import create_or_update_subscription
 
@@ -16,7 +21,20 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
     personas = list_enabled_personas(session)
-    return templates.TemplateResponse(request, "index.html", {"personas": personas})
+    persona_cards = [
+        {
+            "persona": persona,
+            "analysis_count": count_persona_analyses(session, persona.id),
+            "latest_analysis": next(iter(list_persona_analyses(session, persona.id, limit=1)), None),
+        }
+        for persona in personas
+    ]
+    top_analyses = list_top_analyses(session, limit=3)
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {"persona_cards": persona_cards, "top_analyses": top_analyses},
+    )
 
 
 @router.get("/personas/{slug}", response_class=HTMLResponse)

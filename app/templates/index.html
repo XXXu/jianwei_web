@@ -2,17 +2,72 @@
 {% block title %}见微 - 从信息里看见方向{% endblock %}
 {% block content %}
 <section class="hero">
-  <p class="eyebrow">角色化 AI 情报雷达</p>
-  <h1>从信息里看见方向</h1>
-  <p>选择你的角色，查看为你重新加工的机会、风险和关键变化。</p>
+  <div>
+    <p class="eyebrow">角色化 AI 情报雷达</p>
+    <h1>选择你的情报视角</h1>
+    <p>见微从多源信息中筛选机会、风险和关键变化，为不同角色生成可行动的 AI 情报。</p>
+  </div>
+  <aside class="hero-panel" aria-label="数据处理方式">
+    <span>真实数据源</span>
+    <strong>Horizon 抓取、去重、AI 打分</strong>
+    <span>见微按角色展示高价值信号</span>
+  </aside>
+</section>
+
+<section class="section-heading">
+  <p class="eyebrow">Choose</p>
+  <h2>你现在最接近哪种角色？</h2>
 </section>
 
 <section class="persona-grid" aria-label="角色选择">
-  {% for persona in personas %}
+  {% for card in persona_cards %}
+    {% set persona = card.persona %}
     <a class="persona-card" href="/personas/{{ persona.slug }}">
-      <h2>{{ persona.name }}</h2>
+      <div class="persona-card-head">
+        <h2>{{ persona.name }}</h2>
+        <span>最近更新：{{ card.analysis_count }} 条</span>
+      </div>
       <p>{{ persona.description }}</p>
+      <p class="muted">{{ persona.prompt_profile }}</p>
+      {% if card.latest_analysis %}
+        <div class="persona-signal">
+          <span>最新信号</span>
+          <strong>{{ card.latest_analysis.item.title }}</strong>
+        </div>
+      {% else %}
+        <div class="persona-signal empty">
+          <span>最新信号</span>
+          <strong>等待下一次数据任务导入。</strong>
+        </div>
+      {% endif %}
     </a>
   {% endfor %}
+</section>
+
+<section class="section-heading">
+  <p class="eyebrow">Signals</p>
+  <h2>今日高价值信号</h2>
+</section>
+
+<section class="feed-list" aria-label="今日高价值信号">
+  {% if top_analyses %}
+    {% for analysis in top_analyses %}
+      <a class="feed-item feed-link" href="/items/{{ analysis.id }}">
+        <div class="score">{{ "%.1f"|format(analysis.score) }}</div>
+        <div>
+          <h2>{{ analysis.item.title }}</h2>
+          <p>{{ analysis.summary }}</p>
+          <p class="muted">{{ analysis.persona.name }} · {{ analysis.item.published_at.strftime("%Y-%m-%d") }}</p>
+        </div>
+      </a>
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">当前还没有新的高价值情报。完成 Horizon 导出和见微导入后会显示在这里。</p>
+  {% endif %}
+</section>
+
+<section class="method-note">
+  <h2>数据如何进入见微</h2>
+  <p>Horizon 从 RSS、GitHub、Hacker News 等来源抓取信息，完成去重和 AI 打分；见微只导入已经结构化的情报，并按角色呈现。</p>
 </section>
 {% endblock %}
