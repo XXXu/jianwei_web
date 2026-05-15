@@ -6,15 +6,17 @@
     <meta name="theme-color" content="#111827">
     <title>{% block title %}见微{% endblock %}</title>
     <link rel="manifest" href="/static/manifest.webmanifest">
-    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/app.css?v=20260515">
   </head>
   <body>
+    {% block site_header %}
     <header class="site-header">
       <a class="brand" href="/">见微</a>
       <nav>
         <a href="/archive">历史归档</a>
       </nav>
     </header>
+    {% endblock %}
     <main>
       {% block content %}{% endblock %}
     </main>

@@ -6,12 +6,11 @@ from sqlalchemy.orm import Session, joinedload
 from app.db import get_session
 from app.models import Analysis
 from app.services.intelligence import (
-    count_persona_analyses,
+    count_items,
     list_persona_analyses,
     list_published_briefings,
-    list_top_analyses,
 )
-from app.services.personas import get_persona_by_slug, list_enabled_personas
+from app.services.personas import get_persona_by_slug
 from app.services.subscriptions import create_or_update_subscription
 
 router = APIRouter()
@@ -20,21 +19,22 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
-    personas = list_enabled_personas(session)
-    persona_cards = [
-        {
-            "persona": persona,
-            "analysis_count": count_persona_analyses(session, persona.id),
-            "latest_analysis": next(iter(list_persona_analyses(session, persona.id, limit=1)), None),
-        }
-        for persona in personas
-    ]
-    top_analyses = list_top_analyses(session, limit=3)
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {"persona_cards": persona_cards, "top_analyses": top_analyses},
-    )
+    return templates.TemplateResponse(request, "index.html", _build_home_context(request, session))
+
+
+def _build_home_context(request: Request, session: Session) -> dict:
+    persona = get_persona_by_slug(session, "indie-maker")
+    analyses = list_persona_analyses(session, persona.id, limit=10) if persona else []
+    summary_date = analyses[0].item.published_at.date() if analyses else None
+    return {
+        "request": request,
+        "persona": persona,
+        "analyses": analyses,
+        "top_analyses": analyses,
+        "selected_count": len(analyses),
+        "total_count": count_items(session),
+        "summary_date": summary_date,
+    }
 
 
 @router.get("/personas/{slug}", response_class=HTMLResponse)

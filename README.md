@@ -1,21 +1,21 @@
 # Jianwei
 
-Jianwei is a role-based AI intelligence website powered by the Horizon intelligence engine.
+Jianwei is an AI intelligence website for indie developers and AI product builders, powered by the Horizon intelligence engine.
 
-It is not meant to be a generic news aggregator. Its goal is to turn scattered information from news sites, RSS feeds, GitHub, communities, product launches, funding updates, and industry channels into actionable intelligence for different user roles.
+It is not meant to be a generic news aggregator. Its goal is to turn scattered information from news sites, RSS feeds, GitHub, communities, product launches, and industry channels into actionable product signals for indie developers.
 
 ## Positioning
 
 > See direction in the signal.
 
-The first version will be a free public website with a lightweight subscription entry point. Users first choose who they are, then enter an intelligence feed tailored to that role.
+The first version will be a free public website with a lightweight subscription entry point, focused on indie developers and AI product builders.
 
-Planned initial roles include:
+The first version focuses on:
 
-- Indie developers / AI product builders
-- Cross-border sellers / global product operators
-- Investment / fundraising observers
-- Enterprise AI adoption leads
+- AI product opportunities
+- Indie-build feasibility
+- Open-source project and tooling changes
+- Acquisition channels, pricing signals, and competitor movement
 
 ## Relationship With Horizon
 
@@ -30,7 +30,7 @@ Horizon
 Owns: source fetching, deduplication, AI scoring, AI enrichment, summary generation, source extensions
 
 jianwei_web
-Owns: homepage, persona pages, detail pages, archives, subscription entry, database, API, PWA, deployment entry
+Owns: homepage, indie-maker intelligence pages, detail pages, archives, subscription entry, database, API, PWA, deployment entry
 ```
 
 This project will use an adapter layer to call Horizon and convert Horizon outputs into Jianwei's own database records.
@@ -39,14 +39,14 @@ This project will use an adapter layer to call Horizon and convert Horizon outpu
 
 The first version is designed to validate:
 
-1. Which roles actually need this kind of intelligence.
-2. Whether role-based AI analysis is valuable enough.
+1. Whether indie developers actually need this kind of AI intelligence.
+2. Whether AI-generated opportunity and risk analysis is valuable enough.
 3. Whether users are willing to revisit or leave a subscription contact.
 
 The first version will include:
 
-- Homepage with persona selection
-- Persona intelligence pages
+- Homepage intelligence entry
+- Indie-maker intelligence pages
 - Intelligence detail pages
 - Historical archive pages
 - Email subscription entry

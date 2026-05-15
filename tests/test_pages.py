@@ -46,9 +46,8 @@ def test_homepage_lists_personas(client: TestClient, db_session: Session) -> Non
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "独立开发者" in response.text
-    assert "选择你的情报视角" in response.text
-    assert "今日高价值信号" in response.text
+    assert "见微信号" in response.text
+    assert "值得独立开发者关注的信号" in response.text
 
 
 def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Session) -> None:
@@ -57,9 +56,13 @@ def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Sess
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "最近更新：1 条" in response.text
     assert "AI Agent Builder Launches" in response.text
+    assert 'href="#signal-' in response.text
+    assert 'id="signal-' in response.text
+    assert 'target="_blank"' in response.text
+    assert "原文" not in response.text
     assert "一个新的 Agent 构建器发布。" in response.text
+    assert "为什么重要" in response.text
 
 
 def test_persona_page_lists_analysis(client: TestClient, db_session: Session) -> None:
@@ -113,7 +116,14 @@ def test_service_worker(client: TestClient) -> None:
     response = client.get("/static/service-worker.js")
 
     assert response.status_code == 200
-    assert "jianwei-static-v1" in response.text
+    assert "jianwei-static-v3" in response.text
+
+
+def test_stylesheet_uses_cache_busting_version(client: TestClient) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert '/static/css/app.css?v=20260515' in response.text
 
 
 def test_archive_page(client: TestClient, db_session: Session) -> None:

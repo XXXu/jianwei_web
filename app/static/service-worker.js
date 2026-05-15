@@ -1,7 +1,5 @@
-const CACHE_NAME = "jianwei-static-v1";
+const CACHE_NAME = "jianwei-static-v3";
 const STATIC_ASSETS = [
-  "/",
-  "/archive",
   "/static/css/app.css",
   "/static/manifest.webmanifest",
 ];
@@ -33,12 +31,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request);
-    }),
+    fetch(event.request)
+      .then((response) => {
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        return response;
+      })
+      .catch(() => caches.match(event.request)),
   );
 });

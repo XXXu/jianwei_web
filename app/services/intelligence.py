@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Analysis, Briefing
+from app.models import Analysis, Briefing, Item, Source
 
 
 def list_persona_analyses(session: Session, persona_id: int, limit: int = 20) -> list[Analysis]:
     return (
         session.query(Analysis)
-        .options(joinedload(Analysis.item))
+        .options(joinedload(Analysis.item).joinedload(Item.source))
         .filter(Analysis.persona_id == persona_id)
         .order_by(Analysis.score.desc(), Analysis.created_at.desc())
         .limit(limit)
@@ -18,10 +18,18 @@ def count_persona_analyses(session: Session, persona_id: int) -> int:
     return session.query(Analysis).filter(Analysis.persona_id == persona_id).count()
 
 
+def count_items(session: Session) -> int:
+    return session.query(Item).count()
+
+
+def count_sources(session: Session) -> int:
+    return session.query(Source).count()
+
+
 def list_top_analyses(session: Session, limit: int = 3) -> list[Analysis]:
     return (
         session.query(Analysis)
-        .options(joinedload(Analysis.item), joinedload(Analysis.persona))
+        .options(joinedload(Analysis.item).joinedload(Item.source), joinedload(Analysis.persona))
         .order_by(Analysis.score.desc(), Analysis.created_at.desc())
         .limit(limit)
         .all()

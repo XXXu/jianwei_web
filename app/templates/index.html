@@ -1,73 +1,94 @@
 {% extends "base.html" %}
-{% block title %}见微 - 从信息里看见方向{% endblock %}
+{% block title %}见微信号 - 独立开发者的 AI 情报{% endblock %}
+{% block site_header %}{% endblock %}
 {% block content %}
-<section class="hero">
-  <div>
-    <p class="eyebrow">角色化 AI 情报雷达</p>
-    <h1>选择你的情报视角</h1>
-    <p>见微从多源信息中筛选机会、风险和关键变化，为不同角色生成可行动的 AI 情报。</p>
+<section class="daily-hero">
+  <div class="daily-hero-inner">
+    <h1>见微信号{% if summary_date %}：{{ summary_date.strftime("%Y-%m-%d") }}{% endif %}</h1>
+    <p>见微是面向独立开发者和 AI 产品创业者的情报筛选工具</p>
   </div>
-  <aside class="hero-panel" aria-label="数据处理方式">
-    <span>真实数据源</span>
-    <strong>Horizon 抓取、去重、AI 打分</strong>
-    <span>见微按角色展示高价值信号</span>
-  </aside>
 </section>
 
-<section class="section-heading">
-  <p class="eyebrow">Choose</p>
-  <h2>你现在最接近哪种角色？</h2>
-</section>
+<section class="digest-layout" id="signals">
+  <p class="digest-note">
+    从 {{ total_count }} 条内容中，筛出 {{ selected_count }} 条值得独立开发者关注的信号
+  </p>
 
-<section class="persona-grid" aria-label="角色选择">
-  {% for card in persona_cards %}
-    {% set persona = card.persona %}
-    <a class="persona-card" href="/personas/{{ persona.slug }}">
-      <div class="persona-card-head">
-        <h2>{{ persona.name }}</h2>
-        <span>最近更新：{{ card.analysis_count }} 条</span>
-      </div>
-      <p>{{ persona.description }}</p>
-      <p class="muted">{{ persona.prompt_profile }}</p>
-      {% if card.latest_analysis %}
-        <div class="persona-signal">
-          <span>最新信号</span>
-          <strong>{{ card.latest_analysis.item.title }}</strong>
-        </div>
-      {% else %}
-        <div class="persona-signal empty">
-          <span>最新信号</span>
-          <strong>等待下一次数据任务导入。</strong>
-        </div>
-      {% endif %}
-    </a>
-  {% endfor %}
-</section>
+  <section class="digest-index" aria-label="今日信号列表">
+    {% if analyses %}
+      <ol class="ranked-list">
+        {% for analysis in analyses %}
+          <li>
+            <a href="#signal-{{ analysis.id }}">{{ analysis.item.title }}</a>
+            <span class="score-badge {% if analysis.score >= 9 %}score-high{% elif analysis.score >= 8 %}score-mid{% else %}score-low{% endif %}">
+              {{ "%.1f"|format(analysis.score) }}
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="empty-state">当前还没有独立开发者情报。完成 Horizon 导出和见微导入后会显示在这里。</p>
+    {% endif %}
+  </section>
 
-<section class="section-heading">
-  <p class="eyebrow">Signals</p>
-  <h2>今日高价值信号</h2>
-</section>
-
-<section class="feed-list" aria-label="今日高价值信号">
   {% if top_analyses %}
-    {% for analysis in top_analyses %}
-      <a class="feed-item feed-link" href="/items/{{ analysis.id }}">
-        <div class="score">{{ "%.1f"|format(analysis.score) }}</div>
-        <div>
-          <h2>{{ analysis.item.title }}</h2>
-          <p>{{ analysis.summary }}</p>
-          <p class="muted">{{ analysis.persona.name }} · {{ analysis.item.published_at.strftime("%Y-%m-%d") }}</p>
-        </div>
-      </a>
-    {% endfor %}
-  {% else %}
-    <p class="empty-state">当前还没有新的高价值情报。完成 Horizon 导出和见微导入后会显示在这里。</p>
-  {% endif %}
-</section>
+    <section class="digest-details" aria-label="重点情报详情">
+      {% for analysis in top_analyses %}
+        <article class="digest-detail" id="signal-{{ analysis.id }}">
+          <header class="detail-title-row">
+            <h2>
+              {% if analysis.item.url %}
+                <a href="{{ analysis.item.url }}" target="_blank" rel="noopener noreferrer">{{ analysis.item.title }}</a>
+              {% else %}
+                {{ analysis.item.title }}
+              {% endif %}
+            </h2>
+            <span class="score-badge large {% if analysis.score >= 9 %}score-high{% elif analysis.score >= 8 %}score-mid{% else %}score-low{% endif %}">
+              {{ "%.1f"|format(analysis.score) }}
+            </span>
+          </header>
 
-<section class="method-note">
-  <h2>数据如何进入见微</h2>
-  <p>Horizon 从 RSS、GitHub、Hacker News 等来源抓取信息，完成去重和 AI 打分；见微只导入已经结构化的情报，并按角色呈现。</p>
+          <p class="detail-summary">{{ analysis.summary }}</p>
+
+          <p class="detail-meta">
+            {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at.strftime("%m月%d日 %H:%M") }}
+          </p>
+
+          <p><strong>为什么重要：</strong>{{ analysis.why_it_matters }}</p>
+
+          {% if analysis.opportunities %}
+            <div class="detail-block">
+              <strong>可做机会：</strong>
+              <ul>
+                {% for opportunity in analysis.opportunities[:2] %}
+                  <li>{{ opportunity }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if analysis.risks %}
+            <div class="detail-block">
+              <strong>风险提醒：</strong>
+              <ul>
+                {% for risk in analysis.risks[:2] %}
+                  <li>{{ risk }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if analysis.tags %}
+            <p class="tags">
+              <strong>标签：</strong>
+              {% for tag in analysis.tags %}
+                <span>#{{ tag }}</span>
+              {% endfor %}
+            </p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
 </section>
 {% endblock %}
