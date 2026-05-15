@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ summary_date.strftime("%Y-%m-%d") }} 全部信号 - 见微{% endblock %}
+{% block site_header %}{% endblock %}
+{% block content %}
+<section class="page-heading day-heading">
+  <h1>{{ summary_date.strftime("%Y-%m-%d") }} 全部信号</h1>
+  <p>{{ persona.name }} · 共 {{ total_count }} 条，按评分从高到低排列。</p>
+  <a class="back-link" href="/">返回今日精选</a>
+</section>
+
+<section class="all-signals" aria-label="当天全部信号">
+  {% if analyses %}
+    {% for analysis in analyses %}
+      <article class="all-signal-item">
+        <div class="all-signal-score">
+          <span class="score-badge large {% if analysis.score >= 9 %}score-high{% elif analysis.score >= 8 %}score-mid{% else %}score-low{% endif %}">
+            {{ "%.1f"|format(analysis.score) }}
+          </span>
+        </div>
+        <div class="all-signal-body">
+          <h2>
+            {% if analysis.item.url %}
+              <a href="{{ analysis.item.url }}" target="_blank" rel="noopener noreferrer">{{ analysis.item.title }}</a>
+            {% else %}
+              {{ analysis.item.title }}
+            {% endif %}
+          </h2>
+          <p class="detail-summary">{{ analysis.summary }}</p>
+          <p class="detail-meta">
+            {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at.strftime("%m月%d日 %H:%M") }}
+          </p>
+          <p><strong>为什么重要：</strong>{{ analysis.why_it_matters }}</p>
+          {% if analysis.tags %}
+            <p class="tags compact-tags">
+              {% for tag in analysis.tags %}
+                <span>#{{ tag }}</span>
+              {% endfor %}
+            </p>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">这一天还没有导入情报。</p>
+  {% endif %}
+</section>
+{% endblock %}

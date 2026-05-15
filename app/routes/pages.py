@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -6,7 +8,9 @@ from sqlalchemy.orm import Session, joinedload
 from app.db import get_session
 from app.models import Analysis
 from app.services.intelligence import (
-    count_items,
+    count_persona_analyses_for_date,
+    get_display_today,
+    list_persona_analyses_for_date,
     list_persona_analyses,
     list_published_briefings,
 )
@@ -24,17 +28,55 @@ def home(request: Request, session: Session = Depends(get_session)) -> HTMLRespo
 
 def _build_home_context(request: Request, session: Session) -> dict:
     persona = get_persona_by_slug(session, "indie-maker")
-    analyses = list_persona_analyses(session, persona.id, limit=10) if persona else []
-    summary_date = analyses[0].item.published_at.date() if analyses else None
+    summary_date = get_display_today() if persona else None
+    analyses = (
+        list_persona_analyses_for_date(session, persona.id, summary_date, limit=10)
+        if persona and summary_date
+        else []
+    )
+    total_count = (
+        count_persona_analyses_for_date(session, persona.id, summary_date)
+        if persona and summary_date
+        else 0
+    )
     return {
         "request": request,
         "persona": persona,
         "analyses": analyses,
         "top_analyses": analyses,
         "selected_count": len(analyses),
-        "total_count": count_items(session),
+        "total_count": total_count,
         "summary_date": summary_date,
     }
+
+
+@router.get("/days/{day}", response_class=HTMLResponse)
+def day_page(
+    day: str,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
+    try:
+        target_date = date.fromisoformat(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Day not found") from exc
+
+    persona = get_persona_by_slug(session, "indie-maker")
+    if persona is None:
+        raise HTTPException(status_code=404, detail="Persona not found")
+
+    analyses = list_persona_analyses_for_date(session, persona.id, target_date)
+    return templates.TemplateResponse(
+        request,
+        "day.html",
+        {
+            "request": request,
+            "persona": persona,
+            "analyses": analyses,
+            "summary_date": target_date,
+            "total_count": len(analyses),
+        },
+    )
 
 
 @router.get("/personas/{slug}", response_class=HTMLResponse)

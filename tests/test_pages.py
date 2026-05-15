@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time, timedelta
 import json
 
 from fastapi.testclient import TestClient
@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.models import Analysis, Briefing, Item, Source
 from app.seed import seed_default_personas
+from app.services.intelligence import DISPLAY_TIMEZONE, get_display_today
 from app.services.personas import get_persona_by_slug
+
+
+def today_at(hour: int, minute: int = 0) -> datetime:
+    local_value = datetime.combine(get_display_today(), time(hour, minute), tzinfo=DISPLAY_TIMEZONE)
+    return local_value.astimezone(UTC)
 
 
 def add_sample_analysis(db_session: Session) -> int:
@@ -21,7 +27,7 @@ def add_sample_analysis(db_session: Session) -> int:
         url="https://example.com/agent",
         content="A new AI agent builder launched.",
         author="Example",
-        published_at=datetime(2026, 5, 12, 8, 0, tzinfo=UTC),
+        published_at=today_at(8),
         metadata_json={},
     )
     analysis = Analysis(
@@ -33,6 +39,44 @@ def add_sample_analysis(db_session: Session) -> int:
         opportunities=["为垂直行业做更简单的 Agent 模板"],
         risks=["通用平台竞争强"],
         tags=["agent", "tool"],
+        model="test-model",
+    )
+    db_session.add_all([source, item, analysis])
+    db_session.commit()
+    return analysis.id
+
+
+def add_analysis(
+    db_session: Session,
+    *,
+    external_id: str,
+    title: str,
+    score: float,
+    published_at: datetime,
+) -> int:
+    seed_default_personas(db_session)
+    persona = get_persona_by_slug(db_session, "indie-maker")
+    assert persona is not None
+    source = Source(type="rss", name=f"Example {external_id}", url="https://example.com/feed.xml", config={})
+    item = Item(
+        source=source,
+        external_id=external_id,
+        title=title,
+        url=f"https://example.com/{external_id}",
+        content=f"{title} content",
+        author="Example",
+        published_at=published_at,
+        metadata_json={},
+    )
+    analysis = Analysis(
+        item=item,
+        persona=persona,
+        score=score,
+        summary=f"{title} 摘要",
+        why_it_matters=f"{title} 重要原因",
+        opportunities=[],
+        risks=[],
+        tags=["demo"],
         model="test-model",
     )
     db_session.add_all([source, item, analysis])
@@ -63,6 +107,93 @@ def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Sess
     assert "原文" not in response.text
     assert "一个新的 Agent 构建器发布。" in response.text
     assert "为什么重要" in response.text
+    assert f"/days/{get_display_today().isoformat()}" in response.text
+    assert "查看今日全部" in response.text
+
+
+def test_homepage_uses_top_10_for_latest_day(client: TestClient, db_session: Session) -> None:
+    add_analysis(
+        db_session,
+        external_id="older-high",
+        title="昨天的高分内容",
+        score=9.9,
+        published_at=today_at(8) - timedelta(days=1),
+    )
+    for index in range(12):
+        add_analysis(
+            db_session,
+            external_id=f"today-{index}",
+            title=f"今日内容 {index}",
+            score=8.0 + index / 10,
+            published_at=today_at(8, index),
+        )
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "从 12 条内容中，筛出 10 条值得独立开发者关注的信号" in response.text
+    assert "昨天的高分内容" not in response.text
+    assert "今日内容 11" in response.text
+    assert "今日内容 0" not in response.text
+    assert "查看今日全部 12 条" in response.text
+
+
+def test_day_page_shows_all_analyses_for_date(client: TestClient, db_session: Session) -> None:
+    add_analysis(
+        db_session,
+        external_id="older-high",
+        title="昨天的高分内容",
+        score=9.9,
+        published_at=today_at(8) - timedelta(days=1),
+    )
+    add_analysis(
+        db_session,
+        external_id="today-low",
+        title="今日低分内容",
+        score=7.1,
+        published_at=today_at(8),
+    )
+    add_analysis(
+        db_session,
+        external_id="today-high",
+        title="今日高分内容",
+        score=9.2,
+        published_at=today_at(9),
+    )
+
+    response = client.get(f"/days/{get_display_today().isoformat()}")
+
+    assert response.status_code == 200
+    assert f"{get_display_today().isoformat()} 全部信号" in response.text
+    assert "共 2 条" in response.text
+    assert "今日高分内容" in response.text
+    assert "今日低分内容" in response.text
+    assert "昨天的高分内容" not in response.text
+    assert "历史归档" not in response.text
+    assert response.text.index("今日高分内容") < response.text.index("今日低分内容")
+
+
+def test_day_page_invalid_date(client: TestClient) -> None:
+    response = client.get("/days/not-a-date")
+
+    assert response.status_code == 404
+
+
+def test_homepage_groups_days_by_china_timezone(client: TestClient, db_session: Session) -> None:
+    add_analysis(
+        db_session,
+        external_id="utc-evening",
+        title="北京时间 15 号的内容",
+        score=8.8,
+        published_at=today_at(2),
+    )
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert f"见微信号：{get_display_today().isoformat()}" in response.text
+    assert f"/days/{get_display_today().isoformat()}" in response.text
+    assert "北京时间 15 号的内容" in response.text
 
 
 def test_persona_page_lists_analysis(client: TestClient, db_session: Session) -> None:

@@ -12,6 +12,11 @@
 <section class="digest-layout" id="signals">
   <p class="digest-note">
     从 {{ total_count }} 条内容中，筛出 {{ selected_count }} 条值得独立开发者关注的信号
+    {% if summary_date and total_count > selected_count %}
+      <a class="daily-all-link" href="/days/{{ summary_date.strftime('%Y-%m-%d') }}">查看今日全部 {{ total_count }} 条</a>
+    {% elif summary_date %}
+      <a class="daily-all-link" href="/days/{{ summary_date.strftime('%Y-%m-%d') }}">查看今日全部</a>
+    {% endif %}
   </p>
 
   <section class="digest-index" aria-label="今日信号列表">
