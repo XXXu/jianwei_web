@@ -196,6 +196,26 @@ def test_homepage_groups_days_by_china_timezone(client: TestClient, db_session: 
     assert "北京时间 15 号的内容" in response.text
 
 
+def test_homepage_falls_back_to_latest_data_date(client: TestClient, db_session: Session) -> None:
+    latest_data_date = get_display_today() - timedelta(days=1)
+    local_value = datetime.combine(latest_data_date, time(8), tzinfo=DISPLAY_TIMEZONE)
+    add_analysis(
+        db_session,
+        external_id="latest-day",
+        title="最近一天的数据",
+        score=8.6,
+        published_at=local_value.astimezone(UTC),
+    )
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert f"见微信号：{latest_data_date.isoformat()}" in response.text
+    assert f"/days/{latest_data_date.isoformat()}" in response.text
+    assert "最近一天的数据" in response.text
+    assert "从 1 条内容中，筛出 1 条值得独立开发者关注的信号" in response.text
+
+
 def test_persona_page_lists_analysis(client: TestClient, db_session: Session) -> None:
     add_sample_analysis(db_session)
 

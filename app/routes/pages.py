@@ -10,6 +10,7 @@ from app.models import Analysis
 from app.services.intelligence import (
     count_persona_analyses_for_date,
     get_display_today,
+    get_latest_persona_analysis_date,
     list_persona_analyses_for_date,
     list_persona_analyses,
     list_published_briefings,
@@ -28,7 +29,15 @@ def home(request: Request, session: Session = Depends(get_session)) -> HTMLRespo
 
 def _build_home_context(request: Request, session: Session) -> dict:
     persona = get_persona_by_slug(session, "indie-maker")
-    summary_date = get_display_today() if persona else None
+    if persona:
+        today = get_display_today()
+        summary_date = (
+            today
+            if count_persona_analyses_for_date(session, persona.id, today) > 0
+            else get_latest_persona_analysis_date(session, persona.id)
+        )
+    else:
+        summary_date = None
     analyses = (
         list_persona_analyses_for_date(session, persona.id, summary_date, limit=10)
         if persona and summary_date
