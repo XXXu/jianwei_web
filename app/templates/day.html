@@ -2,6 +2,7 @@
 {% block title %}{{ summary_date.strftime("%Y-%m-%d") }} 全部信号 - 见微{% endblock %}
 {% block site_header %}{% endblock %}
 {% block content %}
+<div class="day-layout">
 <section class="page-heading day-heading">
   <h1>{{ summary_date.strftime("%Y-%m-%d") }} 全部信号</h1>
   <p>{{ persona.name }} · 共 {{ total_count }} 条，按评分从高到低排列。</p>
@@ -11,27 +12,49 @@
 <section class="all-signals" aria-label="当天全部信号">
   {% if analyses %}
     {% for analysis in analyses %}
-      <article class="all-signal-item">
-        <div class="all-signal-score">
-          <span class="score-badge large {% if analysis.score >= 9 %}score-high{% elif analysis.score >= 8 %}score-mid{% else %}score-low{% endif %}">
-            {{ "%.1f"|format(analysis.score) }}
-          </span>
-        </div>
+      <article class="all-signal-item" id="signal-{{ analysis.id }}">
         <div class="all-signal-body">
-          <h2>
-            {% if analysis.item.url %}
-              <a href="{{ analysis.item.url }}" target="_blank" rel="noopener noreferrer">{{ analysis.item.title }}</a>
-            {% else %}
-              {{ analysis.item.title }}
-            {% endif %}
-          </h2>
+          <header class="detail-title-row">
+            <h2>
+              {% if analysis.item.url %}
+                <a href="{{ analysis.item.url }}" target="_blank" rel="noopener noreferrer">{{ analysis.item.title }}</a>
+              {% else %}
+                {{ analysis.item.title }}
+              {% endif %}
+            </h2>
+            <span class="score-badge large {% if analysis.score >= 9 %}score-high{% elif analysis.score >= 8 %}score-mid{% else %}score-low{% endif %}">
+              {{ "%.1f"|format(analysis.score) }}
+            </span>
+          </header>
           <p class="detail-summary">{{ analysis.summary }}</p>
           <p class="detail-meta">
             {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at.strftime("%m月%d日 %H:%M") }}
           </p>
-          <p><strong>为什么重要：</strong>{{ analysis.why_it_matters }}</p>
+          <p><strong>关键信号：</strong>{{ analysis.why_it_matters }}</p>
+          {% if analysis.opportunities %}
+            <div class="detail-block">
+              <strong>可做机会：</strong>
+              <ul>
+                {% for opportunity in analysis.opportunities[:2] %}
+                  <li>{{ opportunity }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if analysis.risks %}
+            <div class="detail-block">
+              <strong>风险提醒：</strong>
+              <ul>
+                {% for risk in analysis.risks[:2] %}
+                  <li>{{ risk }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
           {% if analysis.tags %}
             <p class="tags compact-tags">
+              <strong>标签：</strong>
               {% for tag in analysis.tags %}
                 <span>#{{ tag }}</span>
               {% endfor %}
@@ -44,4 +67,5 @@
     <p class="empty-state">这一天还没有导入情报。</p>
   {% endif %}
 </section>
+</div>
 {% endblock %}

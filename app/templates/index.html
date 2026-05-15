@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}见微信号 - 独立开发者的 AI 情报{% endblock %}
+{% block title %}见微知著 - 独立开发者的 AI 情报{% endblock %}
 {% block site_header %}{% endblock %}
 {% block content %}
 <section class="daily-hero">
   <div class="daily-hero-inner">
-    <h1>见微信号{% if summary_date %}：{{ summary_date.strftime("%Y-%m-%d") }}{% endif %}</h1>
+    <h1>见微知著{% if summary_date %}：{{ summary_date.strftime("%Y-%m-%d") }}{% endif %}</h1>
     <p>见微是面向独立开发者和 AI 产品创业者的情报筛选工具</p>
   </div>
 </section>
@@ -59,7 +59,7 @@
             {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at.strftime("%m月%d日 %H:%M") }}
           </p>
 
-          <p><strong>为什么重要：</strong>{{ analysis.why_it_matters }}</p>
+          <p><strong>关键信号：</strong>{{ analysis.why_it_matters }}</p>
 
           {% if analysis.opportunities %}
             <div class="detail-block">
@@ -93,6 +93,11 @@
           {% endif %}
         </article>
       {% endfor %}
+      {% if summary_date and total_count > selected_count %}
+        <div class="digest-footer-action">
+          <a class="digest-footer-link" href="/days/{{ summary_date.strftime('%Y-%m-%d') }}#signal-{{ top_analyses[-1].id }}">查看今日全部 {{ total_count }} 条</a>
+        </div>
+      {% endif %}
     </section>
   {% endif %}
 </section>

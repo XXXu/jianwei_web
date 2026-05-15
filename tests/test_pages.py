@@ -1,5 +1,6 @@
 from datetime import UTC, date, datetime, time, timedelta
 import json
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -74,8 +75,8 @@ def add_analysis(
         score=score,
         summary=f"{title} 摘要",
         why_it_matters=f"{title} 重要原因",
-        opportunities=[],
-        risks=[],
+        opportunities=[f"{title} 的可做机会"],
+        risks=[f"{title} 的风险提醒"],
         tags=["demo"],
         model="test-model",
     )
@@ -90,7 +91,7 @@ def test_homepage_lists_personas(client: TestClient, db_session: Session) -> Non
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "见微信号" in response.text
+    assert "见微知著" in response.text
     assert "值得独立开发者关注的信号" in response.text
 
 
@@ -106,7 +107,7 @@ def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Sess
     assert 'target="_blank"' in response.text
     assert "原文" not in response.text
     assert "一个新的 Agent 构建器发布。" in response.text
-    assert "为什么重要" in response.text
+    assert "关键信号" in response.text
     assert f"/days/{get_display_today().isoformat()}" in response.text
     assert "查看今日全部" in response.text
 
@@ -136,6 +137,8 @@ def test_homepage_uses_top_10_for_latest_day(client: TestClient, db_session: Ses
     assert "今日内容 11" in response.text
     assert "今日内容 0" not in response.text
     assert "查看今日全部 12 条" in response.text
+    assert 'class="digest-footer-link"' in response.text
+    assert "#signal-" in response.text
 
 
 def test_day_page_shows_all_analyses_for_date(client: TestClient, db_session: Session) -> None:
@@ -170,6 +173,12 @@ def test_day_page_shows_all_analyses_for_date(client: TestClient, db_session: Se
     assert "今日低分内容" in response.text
     assert "昨天的高分内容" not in response.text
     assert "历史归档" not in response.text
+    assert 'class="all-signal-score"' not in response.text
+    assert 'class="score-badge large' in response.text
+    assert 'id="signal-' in response.text
+    assert "可做机会" in response.text
+    assert "风险提醒" in response.text
+    assert "标签：" in response.text
     assert response.text.index("今日高分内容") < response.text.index("今日低分内容")
 
 
@@ -191,7 +200,7 @@ def test_homepage_groups_days_by_china_timezone(client: TestClient, db_session: 
     response = client.get("/")
 
     assert response.status_code == 200
-    assert f"见微信号：{get_display_today().isoformat()}" in response.text
+    assert f"见微知著：{get_display_today().isoformat()}" in response.text
     assert f"/days/{get_display_today().isoformat()}" in response.text
     assert "北京时间 15 号的内容" in response.text
 
@@ -210,7 +219,7 @@ def test_homepage_falls_back_to_latest_data_date(client: TestClient, db_session:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert f"见微信号：{latest_data_date.isoformat()}" in response.text
+    assert f"见微知著：{latest_data_date.isoformat()}" in response.text
     assert f"/days/{latest_data_date.isoformat()}" in response.text
     assert "最近一天的数据" in response.text
     assert "从 1 条内容中，筛出 1 条值得独立开发者关注的信号" in response.text
@@ -275,6 +284,13 @@ def test_stylesheet_uses_cache_busting_version(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert '/static/css/app.css?v=20260515' in response.text
+
+
+def test_digest_layout_uses_horizon_reading_width() -> None:
+    stylesheet = Path("app/static/css/app.css").read_text(encoding="utf-8")
+
+    assert "--reading-width: 832px;" in stylesheet
+    assert "max-width: var(--reading-width);" in stylesheet
 
 
 def test_archive_page(client: TestClient, db_session: Session) -> None:
