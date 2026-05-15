@@ -276,6 +276,76 @@ uv run horizon-jianwei --persona-slug indie-maker --hours 24 --limit 20
 http://服务器公网 IP/personas/indie-maker
 ```
 
+## 自动同步 Horizon 数据
+
+生产环境不建议每天手动导入，可以使用 `bin/sync_horizon.sh` 自动完成：
+
+```text
+Horizon 抓取和 AI 分析
+  -> 导出见微 artifact
+  -> jianwei_web 导入 artifact
+  -> 页面展示最近成功导入的数据
+```
+
+先给脚本执行权限：
+
+```bash
+chmod +x bin/sync_horizon.sh
+```
+
+手动试跑一次：
+
+```bash
+./bin/sync_horizon.sh
+```
+
+脚本默认假设两个项目目录并排放置：
+
+```text
+vertical_ai_news/
+  Horizon/
+  jianwei_web/
+```
+
+如果你的路径不同，可以用环境变量覆盖：
+
+```bash
+HORIZON_DIR=/root/workspace/vertical_ai_news/Horizon \
+JIANWEI_WEB_DIR=/root/workspace/vertical_ai_news/jianwei_web \
+PERSONA_SLUG=indie-maker \
+HOURS=24 \
+LIMIT=100 \
+./bin/sync_horizon.sh
+```
+
+脚本会写入日志：
+
+```text
+logs/sync_horizon.log
+```
+
+并使用 `flock` 加锁，避免上一次同步没结束时又启动一轮。
+
+配置 crontab：
+
+```bash
+crontab -e
+```
+
+每天早上 7:30 自动同步：
+
+```cron
+30 7 * * * /root/workspace/vertical_ai_news/jianwei_web/bin/sync_horizon.sh
+```
+
+如果想一天跑三次：
+
+```cron
+30 7,12,18 * * * /root/workspace/vertical_ai_news/jianwei_web/bin/sync_horizon.sh
+```
+
+第一阶段建议先每天一次，避免 AI 调用成本和数据源访问频率过高。后续如果需要更实时，再改成一天多次。
+
 ## 数据库迁移和默认角色
 
 直接部署时，`bin/start.sh` 会自动执行：
