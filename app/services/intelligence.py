@@ -19,6 +19,16 @@ def to_display_date(value: datetime) -> date:
     return value.astimezone(DISPLAY_TIMEZONE).date()
 
 
+def to_display_datetime(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(DISPLAY_TIMEZONE)
+
+
+def format_display_datetime(value: datetime, fmt: str = "%m月%d日 %H:%M") -> str:
+    return to_display_datetime(value).strftime(fmt)
+
+
 def get_display_today() -> date:
     return datetime.now(DISPLAY_TIMEZONE).date()
 

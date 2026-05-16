@@ -205,6 +205,26 @@ def test_homepage_groups_days_by_china_timezone(client: TestClient, db_session: 
     assert "北京时间 15 号的内容" in response.text
 
 
+def test_pages_display_published_time_in_china_timezone(client: TestClient, db_session: Session) -> None:
+    add_analysis(
+        db_session,
+        external_id="utc-midnight",
+        title="北京时间展示测试",
+        score=8.8,
+        published_at=today_at(8),
+    )
+
+    expected_time = f"{get_display_today().strftime('%m月%d日')} 08:00"
+
+    home_response = client.get("/")
+    day_response = client.get(f"/days/{get_display_today().isoformat()}")
+
+    assert home_response.status_code == 200
+    assert day_response.status_code == 200
+    assert expected_time in home_response.text
+    assert expected_time in day_response.text
+
+
 def test_homepage_falls_back_to_latest_data_date(client: TestClient, db_session: Session) -> None:
     latest_data_date = get_display_today() - timedelta(days=1)
     local_value = datetime.combine(latest_data_date, time(8), tzinfo=DISPLAY_TIMEZONE)

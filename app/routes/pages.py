@@ -9,6 +9,7 @@ from app.db import get_session
 from app.models import Analysis
 from app.services.intelligence import (
     count_persona_analyses_for_date,
+    format_display_datetime,
     get_display_today,
     get_latest_persona_analysis_date,
     list_persona_analyses_for_date,
@@ -20,6 +21,7 @@ from app.services.subscriptions import create_or_update_subscription
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.filters["display_datetime"] = format_display_datetime
 
 
 @router.get("/", response_class=HTMLResponse)

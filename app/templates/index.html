@@ -56,7 +56,7 @@
           <p class="detail-summary">{{ analysis.summary }}</p>
 
           <p class="detail-meta">
-            {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at.strftime("%m月%d日 %H:%M") }}
+            {{ analysis.item.source.type }} · {{ analysis.item.source.name }} · {{ analysis.item.published_at|display_datetime }}
           </p>
 
           <p><strong>关键信号：</strong>{{ analysis.why_it_matters }}</p>
