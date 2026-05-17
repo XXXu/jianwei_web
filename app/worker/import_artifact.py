@@ -1,6 +1,7 @@
 import argparse
 import json
 from dataclasses import dataclass
+from datetime import UTC, date, datetime, time
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -17,13 +18,17 @@ class ImportResult:
     analyzed_count: int
 
 
-def import_artifact_file(session: Session, path: Path) -> ImportResult:
+def import_artifact_file(
+    session: Session,
+    path: Path,
+    imported_at: datetime | None = None,
+) -> ImportResult:
     payload = json.loads(path.read_text(encoding="utf-8"))
     artifact = parse_horizon_artifact(payload)
     persona = _get_persona(session, artifact)
     source = _get_or_create_source(session, artifact)
     item = _get_or_create_item(session, artifact, source)
-    _get_or_create_analysis(session, artifact, item, persona)
+    _get_or_create_analysis(session, artifact, item, persona, imported_at=imported_at)
     create_run(
         session,
         job_type="import_artifact",
@@ -35,12 +40,16 @@ def import_artifact_file(session: Session, path: Path) -> ImportResult:
     return ImportResult(fetched_count=1, analyzed_count=1)
 
 
-def import_artifact_path(session: Session, path: Path) -> ImportResult:
+def import_artifact_path(
+    session: Session,
+    path: Path,
+    imported_at: datetime | None = None,
+) -> ImportResult:
     paths = [path] if path.is_file() else sorted(path.rglob("*.json"))
     fetched_count = 0
     analyzed_count = 0
     for artifact_path in paths:
-        result = import_artifact_file(session, artifact_path)
+        result = import_artifact_file(session, artifact_path, imported_at=imported_at)
         fetched_count += result.fetched_count
         analyzed_count += result.analyzed_count
     return ImportResult(fetched_count=fetched_count, analyzed_count=analyzed_count)
@@ -49,10 +58,19 @@ def import_artifact_path(session: Session, path: Path) -> ImportResult:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import Horizon artifacts into Jianwei")
     parser.add_argument("path", type=Path, help="Artifact JSON file or directory")
+    parser.add_argument(
+        "--import-date",
+        type=date.fromisoformat,
+        default=None,
+        help="Import batch date in YYYY-MM-DD format",
+    )
     args = parser.parse_args()
+    imported_at = (
+        datetime.combine(args.import_date, time.min, tzinfo=UTC) if args.import_date else None
+    )
 
     with SessionLocal() as session:
-        result = import_artifact_path(session, args.path)
+        result = import_artifact_path(session, args.path, imported_at=imported_at)
 
     print(f"导入完成：fetched={result.fetched_count}, analyzed={result.analyzed_count}")
 
@@ -113,8 +131,9 @@ def _get_or_create_analysis(
     artifact: HorizonArtifact,
     item: Item,
     persona: Persona,
+    imported_at: datetime | None = None,
 ) -> Analysis:
-    import_time = utc_now()
+    import_time = imported_at or utc_now()
     analysis = (
         session.query(Analysis)
         .filter(Analysis.item_id == item.id, Analysis.persona_id == persona.id)
