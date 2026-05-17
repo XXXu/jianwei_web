@@ -67,5 +67,11 @@
     <p class="empty-state">这一天还没有导入情报。</p>
   {% endif %}
 </section>
+{% with form_id="day-subscribe" %}
+  {% include "_subscription_form.html" %}
+{% endwith %}
 </div>
+{% endblock %}
+{% block scripts %}
+  {% include "_subscription_dialog_script.html" %}
 {% endblock %}

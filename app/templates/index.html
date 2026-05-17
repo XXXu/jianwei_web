@@ -100,5 +100,11 @@
       {% endif %}
     </section>
   {% endif %}
+  {% with form_id="home-subscribe" %}
+    {% include "_subscription_form.html" %}
+  {% endwith %}
 </section>
+{% endblock %}
+{% block scripts %}
+  {% include "_subscription_dialog_script.html" %}
 {% endblock %}

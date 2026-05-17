@@ -74,10 +74,12 @@ def upgrade() -> None:
         sa.Column("tags", sa.JSON(), nullable=False),
         sa.Column("model", sa.String(length=120), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("last_imported_at", sa.DateTime(timezone=True), nullable=True),
         sa.UniqueConstraint("item_id", "persona_id", name="uq_analysis_item_persona"),
     )
     op.create_index("ix_analyses_item_id", "analyses", ["item_id"])
     op.create_index("ix_analyses_persona_id", "analyses", ["persona_id"])
+    op.create_index("ix_analyses_last_imported_at", "analyses", ["last_imported_at"])
 
     op.create_table(
         "briefings",

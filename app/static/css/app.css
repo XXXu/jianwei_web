@@ -369,6 +369,95 @@ main {
   padding: 18px;
 }
 
+.email-subscribe {
+  background: rgba(255, 253, 249, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+  margin: 34px 0 0;
+  padding: 20px 22px;
+}
+
+.email-subscribe h2 {
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.email-subscribe p {
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+.email-subscribe-form {
+  display: grid;
+  gap: 8px;
+  max-width: none;
+}
+
+.email-subscribe-form label {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.email-subscribe-controls {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.email-subscribe-controls input {
+  min-height: 44px;
+}
+
+.email-subscribe-controls button {
+  min-height: 44px;
+  min-width: 86px;
+}
+
+.subscribe-notice {
+  border-left: 3px solid var(--orange);
+  color: var(--accent) !important;
+  font-weight: 800;
+  padding-left: 10px;
+}
+
+.subscribe-dialog {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(23, 23, 47, 0.2);
+  color: var(--text);
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 24px;
+}
+
+.subscribe-dialog::backdrop {
+  background: rgba(17, 24, 39, 0.38);
+}
+
+.subscribe-dialog h2 {
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.subscribe-dialog p {
+  color: var(--muted);
+  margin: 10px 0 18px;
+}
+
+.subscribe-dialog form {
+  display: flex;
+  justify-content: flex-end;
+  max-width: none;
+}
+
 .hero,
 .page-heading {
   padding: 42px 0 28px;
@@ -702,5 +791,13 @@ button {
     min-height: 0;
     padding: 8px 10px;
     width: max-content;
+  }
+
+  .email-subscribe {
+    padding: 18px;
+  }
+
+  .email-subscribe-controls {
+    grid-template-columns: 1fr;
   }
 }

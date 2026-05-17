@@ -1,6 +1,8 @@
 from datetime import UTC, date, datetime, time, timedelta, timezone
 
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.sql import ColumnElement
+from sqlalchemy import func
 
 from app.models import Analysis, Briefing, Item, Source
 
@@ -11,6 +13,10 @@ def _day_bounds(target_date: date) -> tuple[datetime, datetime]:
     start_local = datetime.combine(target_date, time.min, tzinfo=DISPLAY_TIMEZONE)
     end_local = start_local + timedelta(days=1)
     return start_local.astimezone(UTC), end_local.astimezone(UTC)
+
+
+def _imported_at_expr() -> ColumnElement[datetime]:
+    return func.coalesce(Analysis.last_imported_at, Analysis.created_at)
 
 
 def to_display_date(value: datetime) -> date:
@@ -45,14 +51,15 @@ def list_persona_analyses(session: Session, persona_id: int, limit: int = 20) ->
 
 
 def get_latest_persona_analysis_date(session: Session, persona_id: int) -> date | None:
-    latest_item = (
-        session.query(Item)
-        .join(Analysis, Analysis.item_id == Item.id)
+    imported_at = _imported_at_expr()
+    latest_imported_at = (
+        session.query(imported_at)
+        .select_from(Analysis)
         .filter(Analysis.persona_id == persona_id)
-        .order_by(Item.published_at.desc())
-        .first()
+        .order_by(imported_at.desc())
+        .scalar()
     )
-    return to_display_date(latest_item.published_at) if latest_item else None
+    return to_display_date(latest_imported_at) if latest_imported_at else None
 
 
 def list_persona_analyses_for_date(
@@ -62,13 +69,14 @@ def list_persona_analyses_for_date(
     limit: int | None = None,
 ) -> list[Analysis]:
     start, end = _day_bounds(target_date)
+    imported_at = _imported_at_expr()
     query = (
         session.query(Analysis)
         .join(Analysis.item)
         .options(joinedload(Analysis.item).joinedload(Item.source))
         .filter(Analysis.persona_id == persona_id)
-        .filter(Item.published_at >= start)
-        .filter(Item.published_at < end)
+        .filter(imported_at >= start)
+        .filter(imported_at < end)
         .order_by(Analysis.score.desc(), Analysis.created_at.desc())
     )
     if limit is not None:
@@ -86,12 +94,12 @@ def count_persona_analyses_for_date(
     target_date: date,
 ) -> int:
     start, end = _day_bounds(target_date)
+    imported_at = _imported_at_expr()
     return (
         session.query(Analysis)
-        .join(Analysis.item)
         .filter(Analysis.persona_id == persona_id)
-        .filter(Item.published_at >= start)
-        .filter(Item.published_at < end)
+        .filter(imported_at >= start)
+        .filter(imported_at < end)
         .count()
     )
 

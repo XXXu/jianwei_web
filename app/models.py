@@ -78,6 +78,9 @@ class Analysis(Base):
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
     model: Mapped[str] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_imported_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     item: Mapped[Item] = relationship(back_populates="analyses")
     persona: Mapped[Persona] = relationship(back_populates="analyses")

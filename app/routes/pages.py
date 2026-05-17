@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
@@ -58,6 +58,8 @@ def _build_home_context(request: Request, session: Session) -> dict:
         "selected_count": len(analyses),
         "total_count": total_count,
         "summary_date": summary_date,
+        "subscription_message": _subscription_message(request),
+        "subscription_return_path": str(request.url.path),
     }
 
 
@@ -86,8 +88,27 @@ def day_page(
             "analyses": analyses,
             "summary_date": target_date,
             "total_count": len(analyses),
+            "subscription_message": _subscription_message(request),
+            "subscription_return_path": str(request.url.path),
         },
     )
+
+
+@router.post("/subscribe", response_class=HTMLResponse)
+def subscribe_from_signal_page(
+    request: Request,
+    email: str = Form(...),
+    return_path: str = Form("/"),
+    session: Session = Depends(get_session),
+) -> RedirectResponse:
+    persona = get_persona_by_slug(session, "indie-maker")
+    if persona is None:
+        raise HTTPException(status_code=404, detail="Persona not found")
+
+    create_or_update_subscription(session, email=email, persona=persona, keywords=[])
+    safe_path = _safe_return_path(return_path)
+    separator = "&" if "?" in safe_path else "?"
+    return RedirectResponse(f"{safe_path}{separator}subscribed=1#subscribe", status_code=303)
 
 
 @router.get("/personas/{slug}", response_class=HTMLResponse)
@@ -156,3 +177,13 @@ def item_detail(
 def archive(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
     briefings = list_published_briefings(session)
     return templates.TemplateResponse(request, "archive.html", {"briefings": briefings})
+
+
+def _subscription_message(request: Request) -> str | None:
+    return "订阅成功，后续可以通过邮件收到见微更新。" if request.query_params.get("subscribed") == "1" else None
+
+
+def _safe_return_path(value: str) -> str:
+    if not value.startswith("/") or value.startswith("//"):
+        return "/"
+    return value

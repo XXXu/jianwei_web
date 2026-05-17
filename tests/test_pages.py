@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Analysis, Briefing, Item, Source
+from app.models import Analysis, Briefing, Item, Source, Subscription
 from app.seed import seed_default_personas
 from app.services.intelligence import DISPLAY_TIMEZONE, get_display_today
 from app.services.personas import get_persona_by_slug
@@ -41,6 +41,7 @@ def add_sample_analysis(db_session: Session) -> int:
         risks=["通用平台竞争强"],
         tags=["agent", "tool"],
         model="test-model",
+        last_imported_at=today_at(8),
     )
     db_session.add_all([source, item, analysis])
     db_session.commit()
@@ -54,6 +55,7 @@ def add_analysis(
     title: str,
     score: float,
     published_at: datetime,
+    last_imported_at: datetime | None = None,
 ) -> int:
     seed_default_personas(db_session)
     persona = get_persona_by_slug(db_session, "indie-maker")
@@ -79,6 +81,7 @@ def add_analysis(
         risks=[f"{title} 的风险提醒"],
         tags=["demo"],
         model="test-model",
+        last_imported_at=last_imported_at or published_at,
     )
     db_session.add_all([source, item, analysis])
     db_session.commit()
@@ -110,6 +113,8 @@ def test_homepage_shows_role_signal_preview(client: TestClient, db_session: Sess
     assert "关键信号" in response.text
     assert f"/days/{get_display_today().isoformat()}" in response.text
     assert "查看今日全部" in response.text
+    assert "订阅见微更新" in response.text
+    assert 'action="/subscribe"' in response.text
 
 
 def test_homepage_uses_top_10_for_latest_day(client: TestClient, db_session: Session) -> None:
@@ -179,6 +184,7 @@ def test_day_page_shows_all_analyses_for_date(client: TestClient, db_session: Se
     assert "可做机会" in response.text
     assert "风险提醒" in response.text
     assert "标签：" in response.text
+    assert "订阅见微更新" in response.text
     assert response.text.index("今日高分内容") < response.text.index("今日低分内容")
 
 
@@ -203,6 +209,25 @@ def test_homepage_groups_days_by_china_timezone(client: TestClient, db_session: 
     assert f"见微知著：{get_display_today().isoformat()}" in response.text
     assert f"/days/{get_display_today().isoformat()}" in response.text
     assert "北京时间 15 号的内容" in response.text
+
+
+def test_homepage_groups_by_imported_date_not_published_date(
+    client: TestClient, db_session: Session
+) -> None:
+    add_analysis(
+        db_session,
+        external_id="published-yesterday-imported-today",
+        title="Published Yesterday Imported Today",
+        score=8.9,
+        published_at=today_at(8) - timedelta(days=1),
+        last_imported_at=today_at(9),
+    )
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert f"/days/{get_display_today().isoformat()}" in response.text
+    assert "Published Yesterday Imported Today" in response.text
 
 
 def test_pages_display_published_time_in_china_timezone(client: TestClient, db_session: Session) -> None:
@@ -267,6 +292,27 @@ def test_subscribe_from_persona_page(client: TestClient, db_session: Session) ->
     assert "订阅成功" in response.text
 
 
+def test_subscribe_from_homepage(client: TestClient, db_session: Session) -> None:
+    seed_default_personas(db_session)
+
+    response = client.post(
+        "/subscribe",
+        data={"email": "READER@example.com", "return_path": "/"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/?subscribed=1#subscribe"
+    subscription = db_session.query(Subscription).one()
+    assert subscription.email == "reader@example.com"
+    assert subscription.status == "active"
+
+    redirected = client.get(response.headers["location"])
+    assert "订阅成功，后续可以通过邮件收到见微更新。" in redirected.text
+    assert 'data-subscribe-dialog' in redirected.text
+    assert 'dialog.showModal()' in redirected.text
+
+
 def test_item_detail_page(client: TestClient, db_session: Session) -> None:
     analysis_id = add_sample_analysis(db_session)
 
@@ -303,7 +349,7 @@ def test_stylesheet_uses_cache_busting_version(client: TestClient) -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert '/static/css/app.css?v=20260515' in response.text
+    assert '/static/css/app.css?v=20260516' in response.text
 
 
 def test_digest_layout_uses_horizon_reading_width() -> None:

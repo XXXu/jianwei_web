@@ -1,0 +1,15 @@
+<script>
+  (() => {
+    const dialog = document.querySelector("[data-subscribe-dialog]");
+    if (!dialog) {
+      return;
+    }
+
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+      return;
+    }
+
+    window.alert("订阅成功，后续可以通过邮件收到见微更新。");
+  })();
+</script>

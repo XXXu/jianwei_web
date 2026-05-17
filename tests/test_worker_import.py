@@ -50,6 +50,7 @@ def test_import_artifact_file(tmp_path: Path, db_session: Session) -> None:
     assert db_session.query(Source).count() == 1
     assert db_session.query(Item).count() == 1
     assert db_session.query(Analysis).count() == 1
+    assert db_session.query(Analysis).one().last_imported_at is not None
     assert db_session.query(Run).count() == 1
 
 

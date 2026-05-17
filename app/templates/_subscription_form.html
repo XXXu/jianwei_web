@@ -1,0 +1,26 @@
+<section class="email-subscribe" id="subscribe" aria-label="邮箱订阅">
+  <div>
+    <h2>订阅见微更新</h2>
+    <p>每天自动把独立开发者和 AI 产品创业者值得看的信号发到邮箱。</p>
+  </div>
+  {% if subscription_message %}
+    <p class="subscribe-notice">{{ subscription_message }}</p>
+  {% endif %}
+  <form class="email-subscribe-form" method="post" action="/subscribe">
+    <input type="hidden" name="return_path" value="{{ subscription_return_path }}">
+    <label for="{{ form_id }}-email">邮箱</label>
+    <div class="email-subscribe-controls">
+      <input id="{{ form_id }}-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+      <button type="submit">免费订阅</button>
+    </div>
+  </form>
+</section>
+{% if subscription_message %}
+  <dialog class="subscribe-dialog" data-subscribe-dialog>
+    <h2>订阅成功</h2>
+    <p>{{ subscription_message }}</p>
+    <form method="dialog">
+      <button type="submit">知道了</button>
+    </form>
+  </dialog>
+{% endif %}

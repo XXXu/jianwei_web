@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#111827">
     <title>{% block title %}见微{% endblock %}</title>
     <link rel="manifest" href="/static/manifest.webmanifest">
-    <link rel="stylesheet" href="/static/css/app.css?v=20260515">
+    <link rel="stylesheet" href="/static/css/app.css?v=20260516">
   </head>
   <body>
     {% block site_header %}
@@ -23,5 +23,6 @@
     <footer class="site-footer">
       <span>从信息里看见方向</span>
     </footer>
+    {% block scripts %}{% endblock %}
   </body>
 </html>

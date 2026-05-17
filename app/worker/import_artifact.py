@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
 from app.integrations.horizon_adapter import HorizonArtifact, parse_horizon_artifact
-from app.models import Analysis, Item, Persona, Source
+from app.models import Analysis, Item, Persona, Source, utc_now
 from app.services.runs import create_run
 
 
@@ -114,6 +114,7 @@ def _get_or_create_analysis(
     item: Item,
     persona: Persona,
 ) -> Analysis:
+    import_time = utc_now()
     analysis = (
         session.query(Analysis)
         .filter(Analysis.item_id == item.id, Analysis.persona_id == persona.id)
@@ -130,6 +131,7 @@ def _get_or_create_analysis(
             risks=artifact.analysis.risks,
             tags=artifact.analysis.tags,
             model=artifact.analysis.model,
+            last_imported_at=import_time,
         )
         session.add(analysis)
     else:
@@ -140,6 +142,7 @@ def _get_or_create_analysis(
         analysis.risks = artifact.analysis.risks
         analysis.tags = artifact.analysis.tags
         analysis.model = artifact.analysis.model
+        analysis.last_imported_at = import_time
     session.commit()
     session.refresh(analysis)
     return analysis
